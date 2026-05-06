@@ -105,26 +105,23 @@ class CustomerController extends Controller
      */
     public function placeOrder(Request $request)
     {
-        // 1. VALIDATION: Added phone and address
+        // 1. VALIDATION: Removed phone and address requirements
         $request->validate([
             'customer_name' => 'required|string|max:255',
-            'phone'         => 'required|string|max:20',
-            'address'       => 'required|string',
         ]);
 
         $cart = session()->get('cart');
 
         if (!$cart || count($cart) == 0) {
-            return redirect()->back()->with('error', 'Your cart is empty!');
+            return redirect()->back()->with('error', 'Your tray is empty!');
         }
 
+        // Calculate total amount
         $total = array_sum(array_map(fn($item) => $item['price'] * $item['quantity'], $cart));
 
-        // 2. CREATE ORDER: Added phone and address to the database save
+        // 2. CREATE ORDER: Removed phone and address from database save
         $order = Order::create([
             'customer_name' => $request->customer_name,
-            'phone'         => $request->phone,   // <--- FIXED
-            'address'       => $request->address, // <--- FIXED
             'total_amount'  => $total,
             'status'        => 'Pending'
         ]);
@@ -139,7 +136,10 @@ class CustomerController extends Controller
             ]);
         }
 
+        // Clear session cart
         session()->forget('cart');
+
+        // Return with the Success Toast (Matches your screenshot)
         return redirect()->back()->with('success', 'Order Placed! Order ID: #' . str_pad($order->id, 5, '0', STR_PAD_LEFT));
     }
 }
