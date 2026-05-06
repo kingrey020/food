@@ -13,33 +13,23 @@
         ::-webkit-scrollbar { width: 5px; }
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
         
-        /* --- THE PRINT ENGINE FIX --- */
         #receipt-canvas { display: none; }
 
         @media print {
-            /* 1. Hide every top-level element inside the body */
-            body > *:not(#receipt-canvas) { 
-                display: none !important; 
-            }
-
-            /* 2. Setup the canvas for the printer */
+            body > *:not(#receipt-canvas) { display: none !important; }
             #receipt-canvas {
                 display: block !important;
                 position: absolute;
                 left: 0;
                 top: 0;
-                width: 80mm; /* Standard Thermal Slip Width */
+                width: 80mm;
                 padding: 4mm;
                 background: white !important;
                 color: black !important;
                 font-family: 'Courier Prime', monospace !important;
                 line-height: 1.2;
             }
-
-            /* 3. Force white background on the page */
             body { background: white !important; }
-            
-            /* Remove browser-added headers and footers */
             @page { size: auto; margin: 0mm; }
         }
     </style>
@@ -121,16 +111,12 @@
                 <div class="flex items-center justify-between px-4">
                     <div class="flex items-center gap-6">
                         <h3 class="text-xl font-bold text-white tracking-tight">Incoming Stream</h3>
-                        <!-- Functional Filter Links -->
                         <div class="flex bg-slate-900 p-1 rounded-xl border border-slate-800 text-[10px] font-black uppercase tracking-widest">
                             <a href="{{ route('admin.dashboard') }}" class="px-4 py-2 rounded-lg transition-all {{ !request('status') ? 'bg-orange-500 text-white' : 'text-slate-500' }}">All</a>
                             <a href="{{ route('admin.dashboard', ['status' => 'Pending']) }}" class="px-4 py-2 rounded-lg transition-all {{ request('status') == 'Pending' ? 'bg-orange-500 text-white' : 'text-slate-500' }}">Pending</a>
                             <a href="{{ route('admin.dashboard', ['status' => 'Done']) }}" class="px-4 py-2 rounded-lg transition-all {{ request('status') == 'Done' ? 'bg-orange-500 text-white' : 'text-slate-500' }}">Done</a>
                         </div>
                     </div>
-                    <button onclick="window.location.reload()" class="p-3 glass rounded-xl hover:bg-white/10 transition-all text-slate-400">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-                    </button>
                 </div>
 
                 <div class="space-y-4">
@@ -145,23 +131,13 @@
                         </div>
 
                         <!-- Intelligence -->
-                        <div class="w-48">
-                            <p class="text-[10px] font-black text-slate-500 uppercase mb-1">Intelligence</p>
-                            <p class="font-bold text-white truncate">{{ $order->customer_name }}</p>
-                            <a href="tel:{{ $order->phone }}" class="text-xs text-orange-500 font-bold hover:underline flex items-center gap-1">
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" stroke-width="2"></path></svg>
-                                {{ $order->phone }}
-                            </a>
+                        <div class="flex-1">
+                            <p class="text-[10px] font-black text-slate-500 uppercase mb-1">Customer</p>
+                            <p class="font-black text-white text-xl truncate">{{ $order->customer_name }}</p>
                         </div>
 
-                        <!-- Target Location -->
-                        <div class="flex-1 max-w-xs">
-                            <p class="text-[10px] font-black text-slate-500 uppercase mb-1">Target Location</p>
-                            <p class="text-xs text-slate-400 leading-relaxed font-medium line-clamp-2 italic">"{{ $order->address }}"</p>
-                        </div>
-
-                        <!-- Payload (FIXED: Uses item_name) -->
-                        <div class="w-56">
+                        <!-- Payload -->
+                        <div class="w-72">
                             <p class="text-[10px] font-black text-slate-500 uppercase mb-1">Payload</p>
                             <div class="flex flex-wrap gap-1">
                                 @foreach($order->items as $item)
@@ -173,7 +149,7 @@
                         </div>
 
                         <!-- Price -->
-                        <div class="w-28 text-center">
+                        <div class="w-28 text-center border-l border-white/5">
                             <p class="text-[10px] font-black text-slate-500 uppercase mb-1">Total</p>
                             <p class="text-xl font-black text-white">₱{{ number_format($order->total_amount, 0) }}</p>
                         </div>
@@ -194,7 +170,6 @@
                                 </div>
                             @endif
 
-                            <!-- DYNAMIC E-RECEIPT PRINT BUTTON -->
                             <button onclick='generateThermalReceipt({!! json_encode($order) !!}, {!! json_encode($order->items) !!})' class="p-3 glass rounded-xl text-slate-500 hover:text-white transition-all">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
                             </button>
@@ -217,24 +192,14 @@
         </div>
     </main>
 
-    <!-- HIDDEN RECEIPT CANVAS (ONLY FOR PRINTER) -->
+    <!-- HIDDEN RECEIPT CANVAS -->
     <div id="receipt-canvas"></div>
-
-    <!-- SUCCESS TOAST -->
-    @if(session('success'))
-    <div id="toast" class="fixed bottom-10 right-10 z-[100] bg-white text-slate-950 px-8 py-5 rounded-2xl shadow-2xl font-black text-[10px] uppercase tracking-widest animate-bounce flex items-center gap-3">
-        <div class="w-2 h-2 bg-emerald-500 rounded-full"></div>
-        {{ session('success') }}
-    </div>
-    <script>setTimeout(() => document.getElementById('toast').remove(), 4000);</script>
-    @endif
 
     <!-- INJECTED RECEIPT SCRIPT -->
     <script>
         function generateThermalReceipt(order, items) {
             const canvas = document.getElementById('receipt-canvas');
             
-            // Build item list
             let itemsHtml = '';
             items.forEach(i => {
                 itemsHtml += `
@@ -244,11 +209,10 @@
                 </div>`;
             });
 
-            // Set Receipt Template
             canvas.innerHTML = `
                 <div style="text-align: center; border-bottom: 1px dashed #000; padding-bottom: 8px; margin-bottom: 8px;">
                     <h2 style="margin: 0; font-size: 20px;">CRAVEBITES</h2>
-                    <p style="margin: 0; font-size: 10px; font-weight: bold; text-transform: uppercase;">Premium Food Delivery</p>
+                    <p style="margin: 0; font-size: 10px; font-weight: bold; text-transform: uppercase;">Command Center Order</p>
                 </div>
                 <div style="font-size: 11px; margin-bottom: 8px; border-bottom: 1px dashed #000; padding-bottom: 5px;">
                     <div>ORD: #${String(order.id).padStart(5, '0')}</div>
@@ -262,11 +226,9 @@
                     <span>TOTAL</span>
                     <span>₱${parseFloat(order.total_amount).toLocaleString()}</span>
                 </div>
-                <div style="font-size: 11px; border: 1px solid #000; padding: 5px;">
-                    <div style="font-weight: bold; text-decoration: underline; margin-bottom: 3px;">DELIVERY TO:</div>
-                    <div style="font-weight: bold; font-size: 13px;">${order.customer_name}</div>
-                    <div style="font-weight: bold;">TEL: ${order.phone}</div>
-                    <div style="margin-top: 3px; font-style: italic;">${order.address}</div>
+                <div style="font-size: 11px; border: 1px solid #000; padding: 8px; text-align: center;">
+                    <div style="font-weight: bold; font-size: 14px; margin-bottom: 2px;">${order.customer_name}</div>
+                    <div style="font-size: 10px;">PICK-UP / DINE-IN</div>
                 </div>
                 <div style="text-align: center; margin-top: 20px; font-size: 11px; font-weight: bold;">
                     --- THANK YOU! ---
