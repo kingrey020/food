@@ -1,183 +1,242 @@
-<x-app-layout>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Command Center | CraveBites</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Courier+Prime&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #F8FAFC; }
-        .order-card:hover { transform: translateY(-5px); transition: all 0.3s ease; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #0f172a; }
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .card-glow:hover { box-shadow: 0 0 30px rgba(249, 115, 22, 0.15); transition: all 0.4s ease; }
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        
+        #receipt-canvas { display: none; }
+
+        @media print {
+            body > *:not(#receipt-canvas) { display: none !important; }
+            #receipt-canvas {
+                display: block !important;
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 80mm;
+                padding: 4mm;
+                background: white !important;
+                color: black !important;
+                font-family: 'Courier Prime', monospace !important;
+                line-height: 1.2;
+            }
+            body { background: white !important; }
+            @page { size: auto; margin: 0mm; }
+        }
     </style>
+</head>
+<body class="text-slate-200 flex h-screen overflow-hidden">
 
-    <div class="py-10">
-        <div class="max-w-[1600px] mx-auto sm:px-6 lg:px-8 space-y-8">
-            
-            <!-- HEADER SECTION -->
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 px-4">
-                <div>
-                    <h2 class="text-3xl font-black text-slate-800 tracking-tight">Orders Command Center</h2>
-                    <p class="text-slate-500 font-medium">Manage live deliveries and restaurant performance.</p>
+    <!-- SIDEBAR -->
+    <aside class="w-72 bg-slate-950 border-r border-slate-800 flex flex-col h-full z-20 no-print">
+        <div class="p-8">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center shadow-lg shadow-orange-500/40">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                 </div>
-                <div class="flex items-center gap-3">
-                    <div class="bg-white p-2 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-3 px-4">
-                        <span class="flex h-3 w-3 relative">
-                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                            <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-                        </span>
-                        <span class="text-sm font-bold text-slate-600 uppercase tracking-widest">System Live</span>
-                    </div>
+                <h1 class="text-xl font-extrabold tracking-tighter text-white">CRAVE<span class="text-orange-500">BITES</span></h1>
+            </div>
+        </div>
+        
+        <nav class="flex-1 px-4 space-y-2 mt-4">
+            <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-4 {{ !request('status') ? 'bg-orange-500/10 text-orange-500 border-orange-500/20' : 'text-slate-400' }} px-6 py-4 rounded-2xl font-bold transition-all border border-transparent">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                Insights
+            </a>
+            <a href="{{ route('admin.menu') }}" class="flex items-center gap-4 text-slate-400 hover:text-white hover:bg-white/5 px-6 py-4 rounded-2xl font-bold transition-all">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                Menu Lab
+            </a>
+        </nav>
+
+        <div class="p-6">
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit" class="w-full flex items-center gap-4 text-slate-500 hover:text-red-400 px-6 py-4 font-bold transition-all rounded-2xl text-sm">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                    End Session
+                </button>
+            </form>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 flex flex-col h-full overflow-y-auto relative no-print">
+        <header class="p-10 flex justify-between items-end">
+            <div>
+                <p class="text-orange-500 font-black text-xs uppercase tracking-[0.3em] mb-2">Live Control</p>
+                <h2 class="text-4xl font-black text-white tracking-tighter">Command Center</h2>
+            </div>
+            <div class="flex items-center gap-4 glass px-6 py-3 rounded-2xl">
+                <span class="flex h-3 w-3 relative">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                </span>
+                <p class="text-sm font-bold text-slate-300">Live Traffic: Online</p>
+            </div>
+        </header>
+
+        <div class="px-10 pb-10 space-y-10">
+            <!-- STAT CARDS -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div class="glass p-8 rounded-[2.5rem] card-glow relative overflow-hidden">
+                    <p class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Gross Volume</p>
+                    <h3 class="text-3xl font-black text-white">₱{{ number_format($totalSales, 2) }}</h3>
+                </div>
+                <div class="glass p-8 rounded-[2.5rem] card-glow">
+                    <p class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Total Fleet</p>
+                    <h3 class="text-3xl font-black text-white">{{ $totalOrders }}</h3>
+                </div>
+                <div class="glass p-8 rounded-[2.5rem] card-glow border-orange-500/20 bg-orange-500/[0.02]">
+                    <p class="text-xs font-bold text-orange-500 uppercase tracking-widest mb-3">In Queue</p>
+                    <h3 class="text-3xl font-black text-orange-500">{{ $pendingOrders }}</h3>
+                </div>
+                <div class="glass p-8 rounded-[2.5rem] card-glow">
+                    <p class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Fulfilled</p>
+                    <h3 class="text-3xl font-black text-emerald-400">{{ $completedOrders }}</h3>
                 </div>
             </div>
 
-            <!-- STATS GRID -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 px-4">
-                <!-- Total Revenue -->
-                <div class="bg-slate-900 p-8 rounded-[2rem] shadow-2xl relative overflow-hidden group">
-                    <div class="absolute right-0 top-0 p-4 opacity-10">
-                        <svg class="w-20 h-20 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-width="2"></path></svg>
-                    </div>
-                    <p class="text-slate-400 text-xs font-black uppercase tracking-[0.2em] mb-2">Total Revenue</p>
-                    <h3 class="text-4xl font-black text-white tracking-tighter">₱{{ number_format($totalSales, 0) }}</h3>
-                    <p class="mt-4 text-emerald-400 text-xs font-bold flex items-center gap-1">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 10l7-7m0 0l7 7m-7-7v18" stroke-width="3"></path></svg>
-                        +12.5% Performance
-                    </p>
-                </div>
-
-                <!-- Pending -->
-                <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 order-card">
-                    <p class="text-slate-400 text-xs font-black uppercase tracking-[0.2em] mb-2">Active Orders</p>
-                    <h3 class="text-4xl font-black text-orange-500 tracking-tighter">{{ $pendingOrders }}</h3>
-                    <div class="mt-4 flex -space-x-2">
-                        <div class="w-8 h-8 rounded-full bg-orange-100 border-2 border-white flex items-center justify-center text-[10px] font-bold text-orange-600">REQ</div>
-                        <div class="w-8 h-8 rounded-full bg-slate-100 border-2 border-white"></div>
+            <!-- ORDER STREAM -->
+            <div class="space-y-6">
+                <div class="flex items-center justify-between px-4">
+                    <div class="flex items-center gap-6">
+                        <h3 class="text-xl font-bold text-white tracking-tight">Incoming Stream</h3>
+                        <div class="flex bg-slate-900 p-1 rounded-xl border border-slate-800 text-[10px] font-black uppercase tracking-widest">
+                            <a href="{{ route('admin.dashboard') }}" class="px-4 py-2 rounded-lg transition-all {{ !request('status') ? 'bg-orange-500 text-white' : 'text-slate-500' }}">All</a>
+                            <a href="{{ route('admin.dashboard', ['status' => 'Pending']) }}" class="px-4 py-2 rounded-lg transition-all {{ request('status') == 'Pending' ? 'bg-orange-500 text-white' : 'text-slate-500' }}">Pending</a>
+                            <a href="{{ route('admin.dashboard', ['status' => 'Done']) }}" class="px-4 py-2 rounded-lg transition-all {{ request('status') == 'Done' ? 'bg-orange-500 text-white' : 'text-slate-500' }}">Done</a>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Fulfilled -->
-                <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 order-card">
-                    <p class="text-slate-400 text-xs font-black uppercase tracking-[0.2em] mb-2">Fulfilled</p>
-                    <h3 class="text-4xl font-black text-emerald-500 tracking-tighter">{{ $completedOrders }}</h3>
-                    <p class="mt-4 text-slate-400 text-xs font-bold">Successfully Delivered</p>
-                </div>
+                <div class="space-y-4">
+                    @forelse($orders as $order)
+                    <div class="glass p-6 rounded-[2.5rem] flex flex-wrap lg:flex-nowrap items-center justify-between gap-8 hover:bg-white/[0.04] transition-all group relative">
+                        
+                        <!-- Log ID -->
+                        <div class="w-32">
+                            <p class="text-[10px] font-black text-slate-500 uppercase mb-1">Log ID</p>
+                            <p class="font-black text-white text-lg">#{{ str_pad($order->id, 5, '0', STR_PAD_LEFT) }}</p>
+                            <p class="text-[10px] font-bold text-orange-500 uppercase">{{ $order->created_at->diffForHumans() }}</p>
+                        </div>
 
-                <!-- Menu Items -->
-                <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 order-card">
-                    <p class="text-slate-400 text-xs font-black uppercase tracking-[0.2em] mb-2">Menu Catalog</p>
-                    <h3 class="text-4xl font-black text-slate-800 tracking-tighter">{{ $menuCount }}</h3>
-                    <a href="{{ route('admin.menu') }}" class="mt-4 text-orange-500 text-xs font-bold hover:underline flex items-center gap-1">
-                        Edit Menu Items →
-                    </a>
-                </div>
-            </div>
+                        <!-- Intelligence -->
+                        <div class="flex-1">
+                            <p class="text-[10px] font-black text-slate-500 uppercase mb-1">Customer</p>
+                            <p class="font-black text-white text-xl truncate">{{ $order->customer_name }}</p>
+                        </div>
 
-            <!-- LIVE ORDERS STREAM -->
-            <div class="px-4">
-                <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden">
-                    <div class="p-8 border-b border-slate-50 flex justify-between items-center">
-                        <h3 class="text-xl font-black text-slate-800 uppercase tracking-tighter">Live Order Stream</h3>
-                        <span class="bg-slate-100 text-slate-500 px-4 py-1 rounded-full text-[10px] font-black">REAL-TIME DATA</span>
+                        <!-- Payload -->
+                        <div class="w-72">
+                            <p class="text-[10px] font-black text-slate-500 uppercase mb-1">Payload</p>
+                            <div class="flex flex-wrap gap-1">
+                                @foreach($order->items as $item)
+                                    <span class="bg-slate-800 text-slate-300 px-2 py-1 rounded-lg text-[10px] font-bold border border-white/5">
+                                        {{ $item->quantity }}x {{ $item->item_name }}
+                                    </span>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        <!-- Price -->
+                        <div class="w-28 text-center border-l border-white/5">
+                            <p class="text-[10px] font-black text-slate-500 uppercase mb-1">Total</p>
+                            <p class="text-xl font-black text-white">₱{{ number_format($order->total_amount, 0) }}</p>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="flex items-center gap-2">
+                            @if($order->status == 'Pending')
+                                <form action="{{ route('admin.order.complete', $order->id) }}" method="POST">
+                                    @csrf
+                                    <button type="submit" class="bg-emerald-500 text-white px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-400 transition-all shadow-lg shadow-emerald-500/20 active:scale-95">
+                                        Fulfill
+                                    </button>
+                                </form>
+                            @else
+                                <div class="px-4 text-emerald-400 font-black text-[10px] uppercase tracking-widest flex items-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                    Deployed
+                                </div>
+                            @endif
+
+                            <button onclick='generateThermalReceipt({!! json_encode($order) !!}, {!! json_encode($order->items) !!})' class="p-3 glass rounded-xl text-slate-500 hover:text-white transition-all">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                            </button>
+
+                            <form action="{{ route('admin.order.delete', $order->id) }}" method="POST" onsubmit="return confirm('Erase permanently?');">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="p-3 glass rounded-xl text-slate-600 hover:text-red-500 hover:bg-red-500/10 transition-all">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                                </button>
+                            </form>
+                        </div>
                     </div>
-
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse">
-                            <thead>
-                                <tr class="bg-slate-50/50 text-slate-400 text-[10px] font-black uppercase tracking-[0.2em]">
-                                    <th class="p-6">ID & Date</th>
-                                    <th class="p-6">Customer Logistics</th>
-                                    <th class="p-6">Delivery Address</th>
-                                    <th class="p-6">Items Ordered</th>
-                                    <th class="p-6 text-center">Amount</th>
-                                    <th class="p-6">Status</th>
-                                    <th class="p-6 text-right">Fulfillment</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-50">
-                                @forelse($orders as $order)
-                                <tr class="hover:bg-slate-50/80 transition-all group">
-                                    <!-- ID -->
-                                    <td class="p-6">
-                                        <span class="block font-black text-slate-900">#{{ str_pad($order->id, 5, '0', STR_PAD_LEFT) }}</span>
-                                        <span class="text-[10px] font-bold text-slate-400 tracking-tighter uppercase">{{ $order->created_at->format('M d • h:i A') }}</span>
-                                    </td>
-
-                                    <!-- Customer Details -->
-                                    <td class="p-6">
-                                        <p class="font-bold text-slate-800 leading-tight">{{ $order->customer_name }}</p>
-                                        <a href="tel:{{ $order->phone }}" class="inline-flex items-center gap-1 text-orange-500 font-bold text-xs hover:underline mt-1">
-                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" stroke-width="2"></path></svg>
-                                            {{ $order->phone }}
-                                        </a>
-                                    </td>
-
-                                    <!-- Address -->
-                                    <td class="p-6">
-                                        <div class="flex items-start gap-2 max-w-[220px]">
-                                            <svg class="w-4 h-4 text-slate-300 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" stroke-width="2"></path></svg>
-                                            <span class="text-xs font-bold text-slate-500 leading-relaxed">{{ $order->address }}</span>
-                                        </div>
-                                    </td>
-
-                                    <!-- Items Breakdown -->
-                                    <td class="p-6">
-                                        <div class="space-y-1">
-                                            @foreach($order->items as $item)
-                                                <div class="flex items-center gap-2">
-                                                    <span class="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-[10px] font-black uppercase">{{ $item->quantity }}x</span>
-                                                    <span class="text-xs font-bold text-slate-600 truncate max-w-[120px]">{{ $item->item_name }}</span>
-                                                </div>
-                                            @endforeach
-                                        </div>
-                                    </td>
-
-                                    <!-- Amount -->
-                                    <td class="p-6 text-center">
-                                        <span class="text-lg font-black text-slate-900 tracking-tighter">₱{{ number_format($order->total_amount, 0) }}</span>
-                                    </td>
-
-                                    <!-- Status -->
-                                    <td class="p-6">
-                                        @if($order->status == 'Pending')
-                                            <span class="bg-orange-100 text-orange-600 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-2 w-fit">
-                                                <span class="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse"></span>
-                                                Pending
-                                            </span>
-                                        @else
-                                            <span class="bg-emerald-100 text-emerald-600 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-2 w-fit">
-                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-                                                Delivered
-                                            </span>
-                                        @endif
-                                    </td>
-
-                                    <!-- Action -->
-                                    <td class="p-6 text-right">
-                                        @if($order->status == 'Pending')
-                                        <form action="{{ route('admin.order.complete', $order->id) }}" method="POST">
-                                            @csrf
-                                            <button type="submit" class="bg-slate-900 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-xl shadow-slate-200">
-                                                Mark Fulfilled
-                                            </button>
-                                        </form>
-                                        @else
-                                            <div class="pr-6">
-                                                <svg class="w-6 h-6 text-emerald-500 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke-width="2"></path></svg>
-                                            </div>
-                                        @endif
-                                    </td>
-                                </tr>
-                                @empty
-                                <tr>
-                                    <td colspan="7" class="p-20 text-center">
-                                        <div class="flex flex-col items-center opacity-20 grayscale">
-                                            <svg class="w-20 h-20 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" stroke-width="1.5"></path></svg>
-                                            <p class="text-xl font-black uppercase tracking-widest">No active orders</p>
-                                        </div>
-                                    </td>
-                                </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
+                    @empty
+                        <div class="glass p-20 rounded-[3rem] text-center opacity-30">
+                            <p class="font-black uppercase tracking-widest text-sm text-slate-500">Silence in the stream</p>
+                        </div>
+                    @endforelse
                 </div>
             </div>
         </div>
-    </div>
-</x-app-layout>
+    </main>
+
+    <!-- HIDDEN RECEIPT CANVAS -->
+    <div id="receipt-canvas"></div>
+
+    <!-- INJECTED RECEIPT SCRIPT -->
+    <script>
+        function generateThermalReceipt(order, items) {
+            const canvas = document.getElementById('receipt-canvas');
+            
+            let itemsHtml = '';
+            items.forEach(i => {
+                itemsHtml += `
+                <div style="display: flex; justify-content: space-between; margin-bottom: 2px; font-size: 12px;">
+                    <span>${i.quantity}x ${i.item_name}</span>
+                    <span>₱${(i.price * i.quantity).toLocaleString()}</span>
+                </div>`;
+            });
+
+            canvas.innerHTML = `
+                <div style="text-align: center; border-bottom: 1px dashed #000; padding-bottom: 8px; margin-bottom: 8px;">
+                    <h2 style="margin: 0; font-size: 20px;">CRAVEBITES</h2>
+                    <p style="margin: 0; font-size: 10px; font-weight: bold; text-transform: uppercase;">Command Center Order</p>
+                </div>
+                <div style="font-size: 11px; margin-bottom: 8px; border-bottom: 1px dashed #000; padding-bottom: 5px;">
+                    <div>ORD: #${String(order.id).padStart(5, '0')}</div>
+                    <div>DATE: ${new Date().toLocaleString()}</div>
+                    <div>STAT: ${order.status.toUpperCase()}</div>
+                </div>
+                <div style="margin-bottom: 8px;">
+                    ${itemsHtml}
+                </div>
+                <div style="border-top: 1px solid #000; padding-top: 5px; display: flex; justify-content: space-between; font-weight: bold; font-size: 16px; border-bottom: 1px dashed #000; padding-bottom: 5px; margin-bottom: 10px;">
+                    <span>TOTAL</span>
+                    <span>₱${parseFloat(order.total_amount).toLocaleString()}</span>
+                </div>
+                <div style="font-size: 11px; border: 1px solid #000; padding: 8px; text-align: center;">
+                    <div style="font-weight: bold; font-size: 14px; margin-bottom: 2px;">${order.customer_name}</div>
+                    <div style="font-size: 10px;">PICK-UP / DINE-IN</div>
+                </div>
+                <div style="text-align: center; margin-top: 20px; font-size: 11px; font-weight: bold;">
+                    --- THANK YOU! ---
+                </div>
+            `;
+
+            window.print();
+        }
+    </script>
+</body>
+</html>
