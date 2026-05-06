@@ -153,29 +153,25 @@
                 <span class="text-sm font-black text-slate-400 uppercase">Total Amount</span>
                 <span class="text-3xl font-black text-slate-900 tracking-tighter">₱{{ number_format($total, 0) }}</span>
             </div>
+<!-- Simplified Form: Name Only -->
+<form action="{{ route('order.place') }}" method="POST" class="space-y-4">
+    @csrf
+    <div class="relative">
+        <input type="text" name="customer_name" placeholder="Enter Customer Name" required 
+               class="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-orange-100 focus:bg-white transition-all font-bold text-sm text-slate-700 shadow-sm">
+    </div>
 
-            <!-- Optimized Grid Layout for Form -->
-            <form action="{{ route('order.place') }}" method="POST" class="space-y-3">
-                @csrf
-                <div class="grid grid-cols-2 gap-2">
-                    <input type="text" name="customer_name" placeholder="Name" required 
-                           class="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-orange-100 focus:bg-white transition-all font-bold text-sm text-slate-700">
-                    
-                    <input type="tel" name="phone" placeholder="Phone" required 
-                           class="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-orange-100 focus:bg-white transition-all font-bold text-sm text-slate-700">
-                </div>
-                
-                <textarea name="address" placeholder="Delivery Address" required rows="2"
-                          class="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-orange-100 focus:bg-white transition-all font-bold text-sm text-slate-700 resize-none"></textarea>
+    <button type="submit" class="w-full bg-slate-900 hover:bg-orange-500 text-white py-4 rounded-2xl font-black text-lg shadow-xl transition-all active:scale-95 flex items-center justify-center gap-3">
+        Place My Order
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+    </button>
+</form>
 
-                <button type="submit" class="w-full bg-slate-900 hover:bg-orange-500 text-white py-4 rounded-2xl font-black text-lg shadow-xl transition-all active:scale-95 flex items-center justify-center gap-3">
-                    Place My Order
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                </button>
-            </form>
-
-            <div class="mt-4 text-center">
-                <a href="{{ route('cart.clear') }}" class="text-slate-400 hover:text-red-500 text-[10px] font-black uppercase tracking-widest">
+<div class="mt-4 text-center">
+    <a href="{{ route('cart.clear') }}" class="text-slate-400 hover:text-red-500 text-[10px] font-black uppercase tracking-widest">
+        Clear Order
+    </a>
+</div>
                     Clear Order
                 </a>
             </div>
